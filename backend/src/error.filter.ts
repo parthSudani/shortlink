@@ -17,7 +17,7 @@ export class ApiErrorFilter implements ExceptionFilter {
     else if (code === 'INVALID_DESTINATION') { status = 400; code = 'INVALID_DESTINATION'; message = 'Destination must be a public HTTP or HTTPS URL without credentials'; }
     else if (error instanceof UniqueConstraintError) { status = 409; code = 'CONFLICT'; message = 'Email or alias is already in use'; }
     else if (error instanceof HttpException) { const body: any = error.getResponse(); status = error.getStatus(); code = body?.error?.toUpperCase?.() || 'HTTP_ERROR'; message = typeof body === 'string' ? body : body?.message || 'Request failed'; }
-    if (status >= 500) { code = 'INTERNAL_ERROR'; message = 'An unexpected error occurred'; console.error(JSON.stringify({ event: 'api_error', requestId: req.headers['x-request-id'], path: req.path, error: error?.message })); }
+    if (status >= 500 && code !== 'CODE_GENERATION_FAILED') { code = 'INTERNAL_ERROR'; message = 'An unexpected error occurred'; console.error(JSON.stringify({ event: 'api_error', requestId: req.headers['x-request-id'], path: req.path, error: error?.message })); }
     res.status(status).json({ statusCode: status, code, message, ...(details.length ? { details } : {}), requestId: req.headers['x-request-id'] || undefined });
   }
 }
