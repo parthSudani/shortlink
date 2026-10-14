@@ -1,4 +1,4 @@
-import { persistClickBatch } from './click-processor';
+import { persistClickBatch } from './infrastructure/clicks/click-processor';
 import { ClickEvent } from './models/click-event.model';
 
 describe('click batch persistence', () => {

@@ -1,4 +1,6 @@
-import { AuthController, LinksController, RedirectController } from './app.controller';
+import { AuthController } from './auth/auth.controller';
+import { LinksController } from './links/links.controller';
+import { RedirectController } from './redirects/redirect.controller';
 describe('controllers', () => {
   it('passes normalized registration inputs to the auth service boundary', async () => {
     const service: any = { register: jest.fn().mockResolvedValue({ user: { id: 'u', email: 'a@b.co' }, accessToken: 'jwt' }) };

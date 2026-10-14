@@ -1,4 +1,4 @@
-import { ClickQueueService } from './click-queue.service';
+import { ClickQueueService } from './infrastructure/clicks/click-queue.service';
 
 describe('Redis click queue', () => {
   function setup() {

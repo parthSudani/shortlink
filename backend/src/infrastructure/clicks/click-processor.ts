@@ -1,6 +1,6 @@
 import { Sequelize } from 'sequelize-typescript';
 import { Transaction } from 'sequelize';
-import { ClickEvent } from './models/click-event.model';
+import { ClickEvent } from '../../models/click-event.model';
 import { ClickEvent as QueueClickEvent } from './click-queue.service';
 
 export async function persistClickBatch(sequelize: Pick<Sequelize, 'transaction' | 'query'>, events: QueueClickEvent[]) {

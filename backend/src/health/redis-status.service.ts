@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { ClickQueueService } from './click-queue.service';
-import { RedisConnectionService } from './redis-connection.service';
+import { ClickQueueService } from '../infrastructure/clicks/click-queue.service';
+import { RedisConnectionService } from '../infrastructure/redis/redis-connection.service';
 
 @Injectable()
 export class RedisStatusService {

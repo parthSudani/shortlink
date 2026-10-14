@@ -3,9 +3,9 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import { ApiErrorFilter } from './error.filter';
+import { ApiErrorFilter } from './common/filters/api-error.filter';
 import { randomUUID } from 'node:crypto';
-import { getAuthConfig } from './auth-config';
+import { getAuthConfig } from './config/auth.config';
 
 async function bootstrap() {
   getAuthConfig();

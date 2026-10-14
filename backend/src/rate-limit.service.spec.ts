@@ -1,4 +1,4 @@
-import { RateLimitService } from './rate-limit.service';
+import { RateLimitService } from './infrastructure/redis/rate-limit.service';
 
 describe('RateLimitService', () => {
   const previous = { max: process.env.RATE_LIMIT_MAX, window: process.env.RATE_LIMIT_WINDOW_SECONDS };

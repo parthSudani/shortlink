@@ -4,17 +4,16 @@ import { JwtService } from '@nestjs/jwt';
 import { QueryTypes, Sequelize, UniqueConstraintError } from 'sequelize';
 import * as argon2 from 'argon2';
 import { UAParser } from 'ua-parser-js';
-import { Link } from './models/link.model';
-import { User } from './models/user.model';
-import { generateCode } from './short-code';
-import { validateDestination } from './url-validation';
-import { ClickQueueService } from './click-queue.service';
-import { RedirectCacheService } from './redirect-cache.service';
-import { RateLimitService } from './rate-limit.service';
+import { Link } from '../models/link.model';
+import { User } from '../models/user.model';
+import { generateCode } from '../links/domain/short-code';
+import { validateDestination } from '../links/domain/url-validation';
+import { ClickQueueService } from '../infrastructure/clicks/click-queue.service';
+import { RedirectCacheService } from '../infrastructure/redis/redirect-cache.service';
+import { RateLimitService } from '../infrastructure/redis/rate-limit.service';
 
 @Injectable()
 export class AppService {
-
   constructor(
     @InjectConnection() private readonly sequelize: Sequelize,
     @InjectModel(User) private readonly users: typeof User,
@@ -52,7 +51,6 @@ export class AppService {
 
   async createLink(ownerId: string, input: { destinationUrl: string; customAlias?: string; expiresAt?: string }, ip: string) {
     await this.rateLimit.checkLinkCreation(ownerId, ip);
-
     let destinationUrl: string;
     try { destinationUrl = await validateDestination(input.destinationUrl); }
     catch { throw new Error('INVALID_DESTINATION'); }
@@ -60,7 +58,6 @@ export class AppService {
     const expiresAt = input.expiresAt ? new Date(input.expiresAt) : null;
     if (expiresAt && (!Number.isFinite(expiresAt.getTime()) || expiresAt <= new Date())) throw new Error('INVALID_EXPIRY');
     const common = { ownerId, destinationUrl, expiresAt };
-
     if (input.customAlias) return this.createLinkRecord({ ...common, code: input.customAlias });
     for (let attempt = 0; attempt < 5; attempt++) {
       try { return await this.createLinkRecord({ ...common, code: generateCode(8) }); }
@@ -119,7 +116,6 @@ export class AppService {
     }
     if (!link) return { status: 404 };
     if (link.expiresAt && new Date(link.expiresAt).getTime() <= Date.now()) return { status: 410 };
-
     const ref = headers.referer;
     let referrerHost: string | null = null;
     try { if (typeof ref === 'string') referrerHost = new URL(ref).hostname.slice(0, 253); } catch { /* malformed referrer is direct */ }

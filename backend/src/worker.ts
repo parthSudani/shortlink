@@ -1,14 +1,14 @@
 import 'reflect-metadata';
 import { hostname } from 'node:os';
 import { Sequelize } from 'sequelize-typescript';
-import { persistClickBatch } from './click-processor';
-import { ClickQueueService } from './click-queue.service';
-import { RedisConnectionService } from './redis-connection.service';
+import { persistClickBatch } from './infrastructure/clicks/click-processor';
+import { ClickQueueService } from './infrastructure/clicks/click-queue.service';
+import { RedisConnectionService } from './infrastructure/redis/redis-connection.service';
 import { ClickEvent } from './models/click-event.model';
 import { DailyLinkStat } from './models/daily-link-stat.model';
 import { Link } from './models/link.model';
 import { User } from './models/user.model';
-import { postgresOptions } from './database-options';
+import { postgresOptions } from './config/database.config';
 
 const redis = new RedisConnectionService();
 const queue = new ClickQueueService(redis);

@@ -2,16 +2,16 @@ import 'reflect-metadata';
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { UniqueConstraintError } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
-import { postgresOptions } from '../src/database-options';
+import { postgresOptions } from '../src/config/database.config';
 import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { ClickEvent } from '../src/models/click-event.model';
 import { DailyLinkStat } from '../src/models/daily-link-stat.model';
 import { Link } from '../src/models/link.model';
 import { User } from '../src/models/user.model';
-import { AppService } from '../src/app.service';
+import { AppService } from '../src/core/app.service';
 import { JwtService } from '@nestjs/jwt';
-import { persistClickBatch } from '../src/click-processor';
+import { persistClickBatch } from '../src/infrastructure/clicks/click-processor';
 
 describe('PostgreSQL Sequelize migrations and persistence', () => {
   let container: StartedPostgreSqlContainer;

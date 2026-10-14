@@ -1,1 +1,1 @@
-{"extends":"./tsconfig.json","compilerOptions":{"outDir":"./dist","rootDir":"src"},"include":["src/worker.ts","src/click-processor.ts","src/database-options.ts","src/models/**/*.ts","src/click-queue.service.ts"]}
+{"extends":"./tsconfig.json","compilerOptions":{"outDir":"./dist","rootDir":"src"},"include":["src/worker.ts","src/infrastructure/clicks/**/*.ts","src/infrastructure/redis/redis-connection.service.ts","src/config/database.config.ts","src/models/**/*.ts"]}

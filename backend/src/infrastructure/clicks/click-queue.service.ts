@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { RedisConnectionService } from './redis-connection.service';
+import { RedisConnectionService } from '../redis/redis-connection.service';
 
 export type ClickEvent = { id: string; linkId: string; clickedAt: string; referrerHost: string | null; device: string; attempt?: number };
 export const CLICK_STREAM = 'shortlink:queue:click-events';

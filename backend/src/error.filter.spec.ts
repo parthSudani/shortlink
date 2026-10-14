@@ -1,4 +1,4 @@
-import { ApiErrorFilter } from './error.filter';
+import { ApiErrorFilter } from './common/filters/api-error.filter';
 
 describe('ApiErrorFilter', () => {
   const consoleError = jest.spyOn(console, 'error').mockImplementation();

@@ -1,4 +1,4 @@
-import { AppService } from './app.service';
+import { AppService } from './core/app.service';
 
 describe('redirect behavior', () => {
   const setup = () => {

@@ -1,4 +1,4 @@
-import { RedirectCacheService } from './redirect-cache.service';
+import { RedirectCacheService } from './infrastructure/redis/redirect-cache.service';
 
 describe('RedirectCacheService', () => {
   const keys = { enabled: process.env.REDIRECT_CACHE_ENABLED, ttl: process.env.CACHE_MAX_TTL_SECONDS };

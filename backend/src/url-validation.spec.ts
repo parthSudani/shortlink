@@ -1,4 +1,4 @@
-import { validateDestination } from './url-validation';
+import { validateDestination } from './links/domain/url-validation';
 describe('validateDestination', () => {
   it('accepts a public HTTP URL', async () => await expect(validateDestination('https://example.com/a')).resolves.toContain('example.com'));
   it.each(['ftp://example.com','http://user:pass@example.com','http://127.0.0.1','http://[::1]','http://localhost'])('rejects %s', async url => await expect(validateDestination(url)).rejects.toThrow());

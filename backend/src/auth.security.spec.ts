@@ -1,10 +1,10 @@
 import { JwtService } from '@nestjs/jwt';
 import { UniqueConstraintError } from 'sequelize';
 import * as argon2 from 'argon2';
-import { AppService } from './app.service';
-import { AuthGuard } from './app.controller';
-import { RateLimitService } from './rate-limit.service';
-import { getAuthConfig } from './auth-config';
+import { AppService } from './core/app.service';
+import { AuthGuard } from './auth/auth.guard';
+import { RateLimitService } from './infrastructure/redis/rate-limit.service';
+import { getAuthConfig } from './config/auth.config';
 
 const secret = 'test-secret-that-is-long-enough-for-jwt';
 const issuer = 'test-api';
@@ -96,7 +96,7 @@ describe('authentication security', () => {
     const { execution, request } = context(`Bearer ${valid}`);
     await new AuthGuard(jwt).canActivate(execution);
     const service: any = { listLinks: jest.fn().mockResolvedValue({ items: [] }) };
-    const { LinksController } = await import('./app.controller');
+    const { LinksController } = await import('./links/links.controller');
     await new LinksController(service).list(request, '0', '20', 'createdAt');
     expect(service.listLinks).toHaveBeenCalledWith('owner-from-token', 0, 20, 'createdAt');
   });
