@@ -1,0 +1,20 @@
+export type User = { id: string; email: string };
+export type AuthResponse = { user: User; accessToken: string };
+export type LinkItem = {
+  id: string;
+  code: string;
+  shortUrl: string;
+  destinationUrl: string;
+  createdAt: string;
+  expiresAt: string | null;
+  totalClicks: number;
+};
+export type LinkDetail = Omit<LinkItem, 'totalClicks'>;
+export type LinkPage = { items: LinkItem[]; page: number; size: number; totalItems: number; totalPages: number };
+export type LinkCreate = { destinationUrl: string; customAlias?: string; expiresAt?: string };
+export type ErrorDetail = { field: string; message: string };
+export type ErrorResponse = { statusCode?: number; code?: string; message?: string; details?: ErrorDetail[] };
+export type AnalyticsSummary = { totalClicks: number; clicksLast30Days: number; firstClickAt: string | null; lastClickAt: string | null };
+export type DailyClicks = { days: number; items: Array<{ date: string; clicks: number }> };
+export type Referrers = { items: Array<{ referrer: string; clicks: number }> };
+export type Devices = { items: Array<{ device: 'desktop' | 'mobile' | 'tablet' | 'unknown'; clicks: number }> };

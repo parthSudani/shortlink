@@ -1,0 +1,49 @@
+{
+  "name": "@shortlink/api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "nest build && tsc -p tsconfig.worker.json",
+    "start": "node dist/main.js",
+    "start:dev": "nest start --watch",
+    "lint": "tsc --noEmit -p tsconfig.json",
+    "test": "jest --runInBand",
+    "test:integration": "jest --config test/jest-integration.json --runInBand",
+    "db:migrate": "sequelize-cli db:migrate --config sequelize.config.cjs --migrations-path migrations",
+    "db:migrate:undo": "sequelize-cli db:migrate:undo --config sequelize.config.cjs --migrations-path migrations"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.1.6",
+    "@nestjs/core": "^11.1.6",
+    "@nestjs/jwt": "^11.0.1",
+    "@nestjs/platform-express": "^11.1.6",
+    "@nestjs/sequelize": "^11.0.0",
+    "@nestjs/swagger": "^11.2.0",
+    "argon2": "^0.44.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.2",
+    "ioredis": "^5.7.0",
+    "ipaddr.js": "^2.2.0",
+    "pg": "^8.16.3",
+    "pg-hstore": "^2.3.4",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "sequelize": "^6.37.7",
+    "sequelize-typescript": "^2.1.6",
+    "ua-parser-js": "^2.0.5"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.10",
+    "@nestjs/schematics": "^11.0.7",
+    "@nestjs/testing": "^11.1.6",
+    "@testcontainers/postgresql": "^11.5.1",
+    "@types/express": "^5.0.3",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.5.2",
+    "jest": "^30.1.3",
+    "sequelize-cli": "^6.6.3",
+    "ts-jest": "^29.4.4",
+    "ts-node": "^10.9.2",
+    "typescript": "~5.9.2"
+  }
+}

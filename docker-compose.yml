@@ -1,0 +1,146 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: shortlink-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-shortlink}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-shortlink123}
+      POSTGRES_DB: ${POSTGRES_DB:-shortlink}
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-shortlink} -d ${POSTGRES_DB:-shortlink}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  redis:
+    image: redis:7-alpine
+    container_name: shortlink-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec", "--maxmemory", "${REDIS_MAX_MEMORY:-256mb}", "--maxmemory-policy", "noeviction"]
+    volumes: [redis_data:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  migrate:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      target: runtime
+    container_name: shortlink-migrate
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://shortlink:shortlink123@postgres:5432/shortlink}
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres: { condition: service_healthy }
+    command: ["npm", "run", "db:migrate"]
+    restart: "no"
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      target: api
+    container_name: shortlink-api
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://shortlink:shortlink123@postgres:5432/shortlink}
+      REDIS_URL: redis://redis:6379
+      PORT: ${PORT:-3000}
+      JWT_SECRET: ${JWT_SECRET:-shortlink-dev-secret-2026-local-only-change-before-deploy}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
+      JWT_ISSUER: ${JWT_ISSUER:-shortlink-api}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-shortlink-dashboard}
+      LOGIN_RATE_LIMIT_MAX: ${LOGIN_RATE_LIMIT_MAX:-10}
+      LOGIN_RATE_LIMIT_WINDOW_SECONDS: ${LOGIN_RATE_LIMIT_WINDOW_SECONDS:-900}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:3000}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:4200}
+      REDIRECT_CACHE_ENABLED: ${REDIRECT_CACHE_ENABLED:-true}
+      REDIS_CONNECT_TIMEOUT_MS: ${REDIS_CONNECT_TIMEOUT_MS:-5000}
+      REDIS_COMMAND_TIMEOUT_MS: ${REDIS_COMMAND_TIMEOUT_MS:-3000}
+      REDIS_MAX_RETRIES_PER_REQUEST: ${REDIS_MAX_RETRIES_PER_REQUEST:-1}
+      REDIS_RETRY_MAX_ATTEMPTS: ${REDIS_RETRY_MAX_ATTEMPTS:-5}
+      REDIS_RETRY_DELAY_MS: ${REDIS_RETRY_DELAY_MS:-250}
+      REDIS_SHUTDOWN_TIMEOUT_MS: ${REDIS_SHUTDOWN_TIMEOUT_MS:-3000}
+      CACHE_MAX_TTL_SECONDS: ${CACHE_MAX_TTL_SECONDS:-3600}
+      QUEUE_BATCH_SIZE: ${QUEUE_BATCH_SIZE:-100}
+      QUEUE_WORKER_CONCURRENCY: ${QUEUE_WORKER_CONCURRENCY:-4}
+      QUEUE_MAX_ATTEMPTS: ${QUEUE_MAX_ATTEMPTS:-8}
+      QUEUE_RETRY_DELAY_MS: ${QUEUE_RETRY_DELAY_MS:-1000}
+      QUEUE_CLAIM_IDLE_MS: ${QUEUE_CLAIM_IDLE_MS:-30000}
+      WORKER_HEARTBEAT_INTERVAL_MS: ${WORKER_HEARTBEAT_INTERVAL_MS:-5000}
+      WORKER_HEARTBEAT_TTL_SECONDS: ${WORKER_HEARTBEAT_TTL_SECONDS:-30}
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      migrate: { condition: service_completed_successfully }
+    ports: ["3000:3000"]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+  worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      target: worker
+    container_name: shortlink-worker
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://shortlink:shortlink123@postgres:5432/shortlink}
+      REDIS_URL: redis://redis:6379
+      REDIS_CONNECT_TIMEOUT_MS: ${REDIS_CONNECT_TIMEOUT_MS:-5000}
+      REDIS_COMMAND_TIMEOUT_MS: ${REDIS_COMMAND_TIMEOUT_MS:-3000}
+      REDIS_MAX_RETRIES_PER_REQUEST: ${REDIS_MAX_RETRIES_PER_REQUEST:-1}
+      REDIS_RETRY_MAX_ATTEMPTS: ${REDIS_RETRY_MAX_ATTEMPTS:-5}
+      REDIS_RETRY_DELAY_MS: ${REDIS_RETRY_DELAY_MS:-250}
+      REDIS_SHUTDOWN_TIMEOUT_MS: ${REDIS_SHUTDOWN_TIMEOUT_MS:-3000}
+      QUEUE_BATCH_SIZE: ${QUEUE_BATCH_SIZE:-100}
+      QUEUE_WORKER_CONCURRENCY: ${QUEUE_WORKER_CONCURRENCY:-4}
+      QUEUE_MAX_ATTEMPTS: ${QUEUE_MAX_ATTEMPTS:-8}
+      QUEUE_RETRY_DELAY_MS: ${QUEUE_RETRY_DELAY_MS:-1000}
+      QUEUE_CLAIM_IDLE_MS: ${QUEUE_CLAIM_IDLE_MS:-30000}
+      WORKER_HEARTBEAT_INTERVAL_MS: ${WORKER_HEARTBEAT_INTERVAL_MS:-5000}
+      WORKER_HEARTBEAT_TTL_SECONDS: ${WORKER_HEARTBEAT_TTL_SECONDS:-30}
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      migrate: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "node", "-e", "const R=require('ioredis');const r=new R(process.env.REDIS_URL,{connectTimeout:2000,maxRetriesPerRequest:1});r.get('shortlink:worker:heartbeat').then(v=>{const ok=v&&Date.now()-Number(v)<Number(process.env.WORKER_HEARTBEAT_TTL_SECONDS||30)*1000;r.disconnect();process.exit(ok?0:1)}).catch(()=>{r.disconnect();process.exit(1)})"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3000}
+    container_name: shortlink-frontend
+    restart: unless-stopped
+    depends_on:
+      api: { condition: service_healthy }
+    ports: ["4200:80"]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+volumes:
+  postgres_data:
+  redis_data:

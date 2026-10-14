@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  validate-and-build:
+    name: Validate and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 24.15.0
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            frontend/package-lock.json
+
+      - name: Install backend and workspace dependencies from lockfile
+        run: npm ci
+
+      - name: Install frontend dependencies from lockfile
+        run: npm ci --prefix frontend
+
+      - name: Backend lint and type check
+        run: npm run lint -w backend
+
+      - name: Backend API and worker build
+        run: npm run build -w backend
+
+      - name: Backend unit tests
+        run: npm test -w backend
+
+      - name: PostgreSQL integration tests with Testcontainers
+        run: npm run test:integration -w backend
+
+      - name: Frontend lint
+        run: npm run lint --prefix frontend
+
+      - name: Frontend type check
+        run: npm run typecheck --prefix frontend
+
+      - name: Frontend tests
+        run: npm test --prefix frontend
+
+      - name: Frontend production build
+        run: npm run build --prefix frontend
+
+      - name: Build API image
+        run: docker build --target api --tag shortlink-api:ci --file backend/Dockerfile .
+
+      - name: Build worker image
+        run: docker build --target worker --tag shortlink-worker:ci --file backend/Dockerfile .
+
+      - name: Build frontend image
+        run: docker build --tag shortlink-frontend:ci --file frontend/Dockerfile .

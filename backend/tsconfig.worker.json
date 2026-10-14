@@ -1,0 +1,1 @@
+{"extends":"./tsconfig.json","compilerOptions":{"outDir":"./dist","rootDir":"src"},"include":["src/worker.ts","src/click-processor.ts","src/database-options.ts","src/models/**/*.ts","src/click-queue.service.ts"]}
